@@ -1,0 +1,569 @@
+1
+00:00:00,000 --> 00:00:06,840
+I'm going to talk about how to write C++ that's safe for
+
+2
+00:00:06,840 --> 00:00:10,000
+some definition of safety.
+
+3
+00:00:10,000 --> 00:00:24,520
+And the general idea is, what is safety?
+
+4
+00:00:24,520 --> 00:00:26,400
+What kind of safety are there?
+
+5
+00:00:26,400 --> 00:00:28,040
+What do we need?
+
+6
+00:00:28,040 --> 00:00:29,280
+That's the first quarter.
+
+7
+00:00:29,280 --> 00:00:33,480
+Then I'm going to show you that we've been creeping up on that
+
+8
+00:00:33,480 --> 00:00:35,599
+for a few decades.
+
+9
+00:00:35,599 --> 00:00:39,320
+It's part of the initial aims of C++.
+
+10
+00:00:39,320 --> 00:00:43,759
+Then I'm going to talk about how to write good contemporary C++
+
+11
+00:00:43,759 --> 00:00:47,439
+under the label of the C++ core guidelines.
+
+12
+00:00:47,439 --> 00:00:49,759
+And then I'm going to talk about profiles,
+
+13
+00:00:49,759 --> 00:00:54,320
+which is about how to guarantee safety.
+
+14
+00:00:54,320 --> 00:00:55,919
+Because guidelines and
+
+15
+00:00:55,919 --> 00:00:59,759
+being careful is not sufficient in all areas.
+
+16
+00:01:01,720 --> 00:01:08,239
+So one of the reasons there's so much talk about safety
+
+17
+00:01:08,239 --> 00:01:14,519
+is that parts of the US government started going on about safety,
+
+18
+00:01:14,519 --> 00:01:16,360
+which is quite reasonable.
+
+19
+00:01:16,360 --> 00:01:20,199
+But they're talking about the whole community,
+
+20
+00:01:20,199 --> 00:01:22,559
+which may or may not be true.
+
+21
+00:01:22,559 --> 00:01:27,279
+And they're talking about the mythical language C, C++,
+
+22
+00:01:27,279 --> 00:01:30,080
+which I have something to say about.
+
+23
+00:01:30,080 --> 00:01:31,879
+Anyway, you can look it up.
+
+24
+00:01:31,879 --> 00:01:35,760
+This is a serious concern that we have to deal with.
+
+25
+00:01:35,760 --> 00:01:39,440
+On the other hand, there's no reason to panic.
+
+26
+00:01:39,440 --> 00:01:43,519
+C++ is doing well in general thing.
+
+27
+00:01:43,519 --> 00:01:47,879
+I mean, TOB measures noise, not usage.
+
+28
+00:01:47,879 --> 00:01:51,919
+So these numbers doesn't show precisely anything.
+
+29
+00:01:51,919 --> 00:01:56,199
+But it does show that maybe a billion or
+
+30
+00:01:56,199 --> 00:02:00,120
+two people depend on what we are doing, so we better do it well.
+
+31
+00:02:03,480 --> 00:02:07,400
+So we have to address the safety issue.
+
+32
+00:02:07,400 --> 00:02:09,759
+It's a real serious problem.
+
+33
+00:02:09,759 --> 00:02:15,240
+I mean, I really don't want my brakes not to work when I press it,
+
+34
+00:02:15,240 --> 00:02:16,639
+if I had a car.
+
+35
+00:02:17,240 --> 00:02:21,679
+And there are other things, if you're in financials,
+
+36
+00:02:21,679 --> 00:02:26,399
+you don't want a transaction to disappear,
+
+37
+00:02:26,399 --> 00:02:29,960
+especially if it was going into your account.
+
+38
+00:02:29,960 --> 00:02:35,440
+And so there's a lot of aspects of this.
+
+39
+00:02:35,440 --> 00:02:39,759
+And the interesting thing is that massive improvement really
+
+40
+00:02:39,759 --> 00:02:43,039
+is possible in a lot of areas.
+
+41
+00:02:44,039 --> 00:02:51,839
+One of my messages in this talk is don't write C slash C++, write C++.
+
+42
+00:02:51,839 --> 00:02:57,080
+We can do much, much better than some of the problems that has been documented.
+
+43
+00:02:57,080 --> 00:03:02,720
+And well, if we don't do it, somebody else will tell us what to do,
+
+44
+00:03:02,720 --> 00:03:04,320
+and we'll like that even less.
+
+45
+00:03:06,039 --> 00:03:10,679
+So ignoring safety issues would hurt the community.
+
+46
+00:03:10,679 --> 00:03:15,279
+And offering guaranteed safety would be in the best tradition of C++, so
+
+47
+00:03:15,279 --> 00:03:17,479
+this is actually an opportunity.
+
+48
+00:03:17,479 --> 00:03:24,919
+I mean, don't let a problem stop you from doing something good.
+
+49
+00:03:24,919 --> 00:03:29,240
+So the ideal of complete type and
+
+50
+00:03:29,240 --> 00:03:32,919
+resource safety wasn't C++ from the beginning.
+
+51
+00:03:32,919 --> 00:03:39,440
+Simula was one of the completely safe languages, except for the bugs.
+
+52
+00:03:39,440 --> 00:03:40,800
+Simula was pretty good at breaking it.
+
+53
+00:03:42,039 --> 00:03:45,479
+But one thing that we know is that
+
+54
+00:03:47,279 --> 00:03:53,080
+we couldn't have complete safety with the hardware we had then and
+
+55
+00:03:53,080 --> 00:03:57,240
+we can't now for all languages and for all uses.
+
+56
+00:03:57,240 --> 00:03:59,080
+But being careful doesn't scare.
+
+57
+00:03:59,080 --> 00:04:04,559
+So we have to use judicious programming techniques supported by library,
+
+58
+00:04:04,559 --> 00:04:07,919
+enforced by language rules and analysis.
+
+59
+00:04:07,919 --> 00:04:13,960
+And I wrote up a basic model for how to do that a few years ago.
+
+60
+00:04:13,960 --> 00:04:17,519
+I actually presented it here, but not much happened.
+
+61
+00:04:20,040 --> 00:04:22,399
+We need it to be C++.
+
+62
+00:04:22,399 --> 00:04:25,679
+That is, there shouldn't be restrictions on what we can do,
+
+63
+00:04:26,959 --> 00:04:31,040
+even though there might be restrictions on how we do it.
+
+64
+00:04:31,040 --> 00:04:34,880
+And there shouldn't be any decline in performance.
+
+65
+00:04:34,880 --> 00:04:36,839
+So this is C++ and
+
+66
+00:04:36,839 --> 00:04:42,200
+actually some of the techniques for writing safe codes improve performance.
+
+67
+00:04:45,320 --> 00:04:49,359
+I'm talking mostly about what can be done by a compiler on static checking
+
+68
+00:04:49,359 --> 00:04:54,160
+because it is free or actually gives improvements in performance.
+
+69
+00:04:54,160 --> 00:04:58,200
+But of course, you need range checking to deal with things that
+
+70
+00:04:58,200 --> 00:05:00,519
+cannot be dealt with statically.
+
+71
+00:05:01,519 --> 00:05:05,600
+And so basically, I'm talking about type and resource safety.
+
+72
+00:05:07,679 --> 00:05:10,079
+And I think this is pretty well defined.
+
+73
+00:05:10,079 --> 00:05:14,519
+Every object is accessed according to the type with which it was defined.
+
+74
+00:05:14,519 --> 00:05:15,399
+That's type safety.
+
+75
+00:05:16,640 --> 00:05:19,679
+And every object is properly constructed and destroyed.
+
+76
+00:05:20,799 --> 00:05:25,200
+Resource safety, you can manage resources that way.
+
+77
+00:05:25,200 --> 00:05:29,760
+If you don't initialize things, then you're breaking some rule.
+
+78
+00:05:29,760 --> 00:05:33,839
+And every pointer either points to a valid object or is a null pointer.
+
+79
+00:05:33,839 --> 00:05:35,760
+That's memory safety.
+
+80
+00:05:35,760 --> 00:05:38,600
+That's harder to achieve, but we can do it.
+
+81
+00:05:38,600 --> 00:05:42,839
+And a reference through a pointer is not through the null pointer.
+
+82
+00:05:42,839 --> 00:05:44,519
+That is, we have to check for
+
+83
+00:05:44,519 --> 00:05:48,600
+null pointers before we go and dereference these valid pointers.
+
+84
+00:05:49,920 --> 00:05:56,440
+And access through a subscripted pointer is in range.
+
+85
+00:05:56,440 --> 00:06:00,679
+That requires a runtime check, and I'll get to that.
+
+86
+00:06:00,679 --> 00:06:04,320
+So basically, this is just what the rules require.
+
+87
+00:06:04,320 --> 00:06:08,799
+You read the standard, and that's what it requires.
+
+88
+00:06:08,799 --> 00:06:17,880
+Read Denny's 45-page C manual from 78, that's what it requires.
+
+89
+00:06:17,880 --> 00:06:20,640
+It's just we haven't been doing it.
+
+90
+00:06:20,640 --> 00:06:26,079
+And so the rules I'm putting forward here are more deduced
+
+91
+00:06:26,079 --> 00:06:27,200
+than invented.
+
+92
+00:06:27,200 --> 00:06:31,359
+They're deduced for what it takes to do what's on this slide.
+
+93
+00:06:31,359 --> 00:06:35,799
+And enforcement rules that I'm suggesting are mutually dependent.
+
+94
+00:06:35,799 --> 00:06:39,440
+You can't just take one thing out of context and
+
+95
+00:06:39,440 --> 00:06:44,839
+expect to get easily specified benefit out of it.
+
+96
+00:06:44,839 --> 00:06:47,239
+You have to have a framework for
+
+97
+00:06:47,239 --> 00:06:51,920
+what you are doing to see what you are planning to get out of it.
+
+98
+00:06:51,920 --> 00:06:58,880
+And C++ still has to serve a wide variety of users and areas.
+
+99
+00:06:58,880 --> 00:07:05,440
+We have millions of users and billions of people relying on us.
+
+100
+00:07:05,440 --> 00:07:07,399
+And one size doesn't fit all.
+
+101
+00:07:07,399 --> 00:07:12,720
+We can't just say this is what safety is, everybody do it this way.
+
+102
+00:07:14,600 --> 00:07:16,399
+That doesn't quite work.
+
+103
+00:07:16,399 --> 00:07:19,079
+C++ is also a systems programming.
+
+104
+00:07:19,079 --> 00:07:22,640
+We manipulate hardware in various ways.
+
+105
+00:07:22,640 --> 00:07:29,679
+We use unusual hardware that is not known in language specification.
+
+106
+00:07:29,679 --> 00:07:33,480
+And we can't outsource this to other languages.
+
+107
+00:07:33,480 --> 00:07:38,079
+A lot of the so-called safe languages outsource all the low-level stuff to
+
+108
+00:07:38,079 --> 00:07:40,119
+C or C++.
+
+109
+00:07:40,119 --> 00:07:45,839
+So if we couldn't do it, well, there would be C left, and
+
+110
+00:07:45,839 --> 00:07:49,279
+basically, but somebody has to do the dirty job here.
+
+111
+00:07:49,279 --> 00:07:52,760
+And we can't break billions of lines of existing code.
+
+112
+00:07:52,760 --> 00:07:55,920
+I say can't, not shouldn't, because we can't.
+
+113
+00:07:55,920 --> 00:07:59,160
+If we try, people will use the old compilers,
+
+114
+00:07:59,160 --> 00:08:03,279
+they will go to a different subset, they will just ignore us.
+
+115
+00:08:03,279 --> 00:08:05,399
+This can't be done.
+
+116
+00:08:05,399 --> 00:08:10,760
+And we can't upgrade the millions of developers quickly.
+
+117
+00:08:10,760 --> 00:08:13,119
+It takes a long time.
+
+118
+00:08:13,119 --> 00:08:17,359
+I keep bumping into people who learn C++ from videos and
+
+119
+00:08:17,359 --> 00:08:20,399
+books that are 10 or 20 years old.
+
+120
+00:08:20,399 --> 00:08:24,920
+I mean, it's tragic, but it could have been so much easier, and
+
+121
+00:08:24,920 --> 00:08:28,839
+the result could have been so much better if they had up-to-date
+
+122
+00:08:28,839 --> 00:08:32,559
+materials teaching up-to-date C++.
+
+123
+00:08:32,559 --> 00:08:38,119
+But getting a whole community like this to move forward
+
+124
+00:08:38,119 --> 00:08:42,960
+is much harder than most people imagine.
+
+125
+00:08:43,799 --> 00:08:47,280
+Okay, these are difficulties, but we must improve, and we can.
+
+126
+00:08:48,799 --> 00:08:55,000
+So the challenge is to describe what we mean by type safe C++ use,
+
+127
+00:08:55,000 --> 00:08:59,400
+no violations to the static type system, no resource leak.
+
+128
+00:08:59,400 --> 00:09:06,200
+If a system leaks a resource, memory, locks, file handles and
+
+129
+00:09:06,200 --> 00:09:10,960
+such, I wouldn't consider it safe, because I can crash it with
+
+130
+00:09:10,960 --> 00:09:14,799
+the equivalent of denial of service attack.
+
+131
+00:09:14,799 --> 00:09:16,880
+Or I could just be sloppy and
+
+132
+00:09:16,880 --> 00:09:19,200
+it crashes when it runs out of resources.
+
+133
+00:09:19,200 --> 00:09:23,880
+So I'm very keen on resource safety, and this is actually one
+
+134
+00:09:23,880 --> 00:09:28,200
+of the things that came into C++ in the first two weeks.
+
+135
+00:09:29,520 --> 00:09:33,080
+And we have to convince developers to do this.
+
+136
+00:09:33,080 --> 00:09:36,960
+There's a lot of belief out there that if you do grubby,
+
+137
+00:09:36,960 --> 00:09:40,000
+complicated, low-level stuff, it must be faster.
+
+138
+00:09:41,599 --> 00:09:44,440
+And furthermore, I can write this grubby,
+
+139
+00:09:44,440 --> 00:09:47,679
+low-level, complicated stuff to show how smart I am.
+
+140
+00:09:49,919 --> 00:09:51,479
+This does not work.
+
+141
+00:09:52,840 --> 00:09:58,239
+We have to raise the level of programming and get this to work at scale.
+
+142
+00:09:58,239 --> 00:10:00,039
+I mean, if I have a class of students.
+
+

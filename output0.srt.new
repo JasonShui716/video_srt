@@ -1,0 +1,495 @@
+1
+00:00:00,000 --> 00:00:10,000
+I'm going to talk about how to write C++ that's safe for some definition of safety. 
+下面我将讨论如何编写符合某种安全定义的 C++。
+
+2
+00:00:10,000 --> 00:00:24,520
+And the general idea is, what is safety?
+总的想法是，什么是安全？
+
+3
+00:00:24,520 --> 00:00:26,400
+What kind of safety are there?
+有哪些安全措施？
+
+4
+00:00:26,400 --> 00:00:28,040
+What do we need?
+我们需要什么？
+
+5
+00:00:28,040 --> 00:00:29,280
+That's the first quarter.
+这是第一季度。
+
+6
+00:00:29,280 --> 00:00:35,599
+Then I'm going to show you that we've been creeping up on that for a few decades. 
+那我就告诉你，几十年来，我们一直在悄悄地前进。
+
+7
+00:00:35,599 --> 00:00:39,320
+It's part of the initial aims of C++.
+这是 C++ 最初目标的一部分。
+
+8
+00:00:39,320 --> 00:00:47,439
+Then I'm going to talk about how to write good contemporary C++ under the label of the C++ core guidelines. 
+然后，我将谈谈如何在 C++ 核心指南的标签下编写优秀的当代 C++。
+
+9
+00:00:47,439 --> 00:00:54,320
+And then I'm going to talk about profiles, which is about how to guarantee safety. 
+然后，我要谈谈概况，也就是如何保证安全。
+
+10
+00:00:54,320 --> 00:00:59,759
+Because guidelines and being careful is not sufficient in all areas. 
+因为仅有指导方针和小心谨慎是不够的。
+
+11
+00:01:01,720 --> 00:01:16,360
+So one of the reasons there's so much talk about safety is that parts of the US government started going on about safety, which is quite reasonable. 
+因此，人们如此热衷于谈论安全问题的原因之一是，美国政府的一些部门开始谈论安全问题，而这是非常合理的。
+
+12
+00:01:16,360 --> 00:01:22,559
+But they're talking about the whole community, which may or may not be true. 
+但他们说的是整个社区，可能是真的，也可能是假的。
+
+13
+00:01:22,559 --> 00:01:30,080
+And they're talking about the mythical language C, C++, which I have something to say about. 
+他们在谈论神话语言 C、C++，对此我有话要说。
+
+14
+00:01:30,080 --> 00:01:31,879
+Anyway, you can look it up.
+总之，你可以查一查。
+
+15
+00:01:31,879 --> 00:01:35,760
+This is a serious concern that we have to deal with.
+这是我们必须解决的一个严重问题。
+
+16
+00:01:35,760 --> 00:01:39,440
+On the other hand, there's no reason to panic.
+另一方面，我们也不必惊慌。
+
+17
+00:01:39,440 --> 00:01:43,519
+C++ is doing well in general thing.
+C++ 的总体情况良好。
+
+18
+00:01:43,519 --> 00:01:47,879
+I mean, TOB measures noise, not usage.
+我的意思是，TOB 测量的是噪音，而不是使用率。
+
+19
+00:01:47,879 --> 00:01:51,919
+So these numbers doesn't show precisely anything.
+因此，这些数字并不能说明什么。
+
+20
+00:01:51,919 --> 00:02:00,120
+But it does show that maybe a billion or two people depend on what we are doing, so we better do it well. 
+但这确实表明，可能有十几二十亿人依赖于我们正在做的事情，所以我们最好把它做好。
+
+21
+00:02:03,480 --> 00:02:07,400
+So we have to address the safety issue.
+因此，我们必须解决安全问题。
+
+22
+00:02:07,400 --> 00:02:09,759
+It's a real serious problem.
+这是一个非常严重的问题。
+
+23
+00:02:09,759 --> 00:02:16,639
+I mean, I really don't want my brakes not to work when I press it, if I had a car. 
+我的意思是，如果我有一辆车，我真的不希望一踩刹车就失灵。
+
+24
+00:02:17,240 --> 00:02:29,960
+And there are other things, if you're in financials, you don't want a transaction to disappear, especially if it was going into your account. 
+还有其他一些事情，如果你是财务人员，你不会希望一笔交易消失，尤其是如果这笔交易进入了你的账户。
+
+25
+00:02:29,960 --> 00:02:35,440
+And so there's a lot of aspects of this.
+因此，这涉及到很多方面。
+
+26
+00:02:35,440 --> 00:02:43,039
+And the interesting thing is that massive improvement really is possible in a lot of areas. 
+有趣的是，在很多领域，大规模的改进确实是可能的。
+
+27
+00:02:44,039 --> 00:02:51,839
+One of my messages in this talk is don't write C slash C++, write C++.
+我在这次演讲中要传达的信息之一是，不要写 C slash C++，而要写 C++。
+
+28
+00:02:51,839 --> 00:02:57,080
+We can do much, much better than some of the problems that has been documented.
+我们可以做得更好，比记录在案的某些问题要好得多。
+
+29
+00:02:57,080 --> 00:03:04,320
+And well, if we don't do it, somebody else will tell us what to do, and we'll like that even less. 
+而且，如果我们不这样做，别人就会告诉我们该怎么做，我们就更不喜欢这样了。
+
+30
+00:03:06,039 --> 00:03:10,679
+So ignoring safety issues would hurt the community.
+因此，忽视安全问题会对社区造成伤害。
+
+31
+00:03:10,679 --> 00:03:17,479
+And offering guaranteed safety would be in the best tradition of C++, so this is actually an opportunity. 
+而提供安全保障则是 C++ 的优良传统，因此这实际上是一个机会。
+
+32
+00:03:17,479 --> 00:03:24,919
+I mean, don't let a problem stop you from doing something good.
+我的意思是，不要让问题阻止你去做好事。
+
+33
+00:03:24,919 --> 00:03:32,919
+So the ideal of complete type and resource safety wasn't C++ from the beginning. 
+因此，完全的类型和资源安全并不是 C++ 一开始就有的理想。
+
+34
+00:03:32,919 --> 00:03:39,440
+Simula was one of the completely safe languages, except for the bugs.
+Simula 是完全安全的语言之一，除了存在漏洞。
+
+35
+00:03:39,440 --> 00:03:40,800
+Simula was pretty good at breaking it.
+西穆拉很擅长打破它。
+
+36
+00:03:42,039 --> 00:03:57,240
+But one thing that we know is that we couldn't have complete safety with the hardware we had then and we can't now for all languages and for all uses. 
+但我们知道的一点是，当时的硬件无法保证完全安全，现在也无法保证所有语言和所有用途都完全安全。
+
+37
+00:03:57,240 --> 00:03:59,080
+But being careful doesn't scare.
+但小心并不可怕。
+
+38
+00:03:59,080 --> 00:04:07,919
+So we have to use judicious programming techniques supported by library, enforced by language rules and analysis. 
+因此，我们必须使用由语言规则和分析支持的、明智的编程技术。
+
+39
+00:04:07,919 --> 00:04:13,960
+And I wrote up a basic model for how to do that a few years ago.
+几年前，我写了一个如何做到这一点的基本模型。
+
+40
+00:04:13,960 --> 00:04:17,519
+I actually presented it here, but not much happened.
+实际上，我在这里提出过，但没什么进展。
+
+41
+00:04:20,040 --> 00:04:22,399
+We need it to be C++.
+我们需要的是 C++。
+
+42
+00:04:22,399 --> 00:04:31,040
+That is, there shouldn't be restrictions on what we can do, even though there might be restrictions on how we do it. 
+也就是说，我们可以做什么不应该受到限制，尽管我们如何做可能会受到限制。
+
+43
+00:04:31,040 --> 00:04:34,880
+And there shouldn't be any decline in performance.
+性能应该不会下降。
+
+44
+00:04:34,880 --> 00:04:42,200
+So this is C++ and actually some of the techniques for writing safe codes improve performance. 
+这就是 C++，实际上，编写安全代码的一些技术可以提高性能。
+
+45
+00:04:45,320 --> 00:04:54,160
+I'm talking mostly about what can be done by a compiler on static checking because it is free or actually gives improvements in performance. 
+我说的主要是编译器在静态检查方面可以做的事情，因为它是免费的，或者确实能提高性能。
+
+46
+00:04:54,160 --> 00:05:00,519
+But of course, you need range checking to deal with things that cannot be dealt with statically. 
+当然，您需要进行范围检查，以处理无法静态处理的问题。
+
+47
+00:05:01,519 --> 00:05:05,600
+And so basically, I'm talking about type and resource safety.
+基本上，我说的是类型和资源安全。
+
+48
+00:05:07,679 --> 00:05:10,079
+And I think this is pretty well defined.
+我认为这一点已经很明确了。
+
+49
+00:05:10,079 --> 00:05:14,519
+Every object is accessed according to the type with which it was defined.
+每个对象都根据其定义的类型进行访问。
+
+50
+00:05:14,519 --> 00:05:15,399
+That's type safety.
+这就是类型安全。
+
+51
+00:05:16,640 --> 00:05:19,679
+And every object is properly constructed and destroyed.
+每件物品都有适当的构造和毁坏。
+
+52
+00:05:20,799 --> 00:05:25,200
+Resource safety, you can manage resources that way.
+资源安全，您可以通过这种方式管理资源。
+
+53
+00:05:25,200 --> 00:05:29,760
+If you don't initialize things, then you're breaking some rule.
+如果不进行初始化，就违反了某些规则。
+
+54
+00:05:29,760 --> 00:05:33,839
+And every pointer either points to a valid object or is a null pointer.
+每个指针要么指向一个有效对象，要么是一个空指针。
+
+55
+00:05:33,839 --> 00:05:35,760
+That's memory safety.
+这就是记忆安全。
+
+56
+00:05:35,760 --> 00:05:38,600
+That's harder to achieve, but we can do it.
+这更难实现，但我们可以做到。
+
+57
+00:05:38,600 --> 00:05:42,839
+And a reference through a pointer is not through the null pointer.
+而通过指针的引用并不是通过空指针。
+
+58
+00:05:42,839 --> 00:05:48,600
+That is, we have to check for null pointers before we go and dereference these valid pointers. 
+也就是说，在取消引用这些有效指针之前，我们必须检查指针是否为空。
+
+59
+00:05:49,920 --> 00:05:56,440
+And access through a subscripted pointer is in range.
+而通过下标指针的访问是在范围内的。
+
+60
+00:05:56,440 --> 00:06:00,679
+That requires a runtime check, and I'll get to that.
+这需要进行运行时检查，我稍后再讲。
+
+61
+00:06:00,679 --> 00:06:04,320
+So basically, this is just what the rules require.
+所以，基本上，这就是规则的要求。
+
+62
+00:06:04,320 --> 00:06:08,799
+You read the standard, and that's what it requires.
+你读了标准，这就是它的要求。
+
+63
+00:06:08,799 --> 00:06:17,880
+Read Denny's 45-page C manual from 78, that's what it requires.
+阅读 Denny 78 年的 45 页 C 手册，这就是它的要求。
+
+64
+00:06:17,880 --> 00:06:20,640
+It's just we haven't been doing it.
+只是我们还没有这样做。
+
+65
+00:06:20,640 --> 00:06:27,200
+And so the rules I'm putting forward here are more deduced than invented. 
+因此，我在这里提出的规则与其说是发明的，不如说是推导出来的。
+
+66
+00:06:27,200 --> 00:06:31,359
+They're deduced for what it takes to do what's on this slide.
+它们是根据做这张幻灯片上的事情所需的条件推导出来的。
+
+67
+00:06:31,359 --> 00:06:35,799
+And enforcement rules that I'm suggesting are mutually dependent.
+我建议的执行规则是相互依存的。
+
+68
+00:06:35,799 --> 00:06:44,839
+You can't just take one thing out of context and expect to get easily specified benefit out of it. 
+你不能断章取义，指望从中轻易获得特定的好处。
+
+69
+00:06:44,839 --> 00:06:51,920
+You have to have a framework for what you are doing to see what you are planning to get out of it. 
+你必须为你正在做的事情制定一个框架，以了解你打算从中得到什么。
+
+70
+00:06:51,920 --> 00:06:58,880
+And C++ still has to serve a wide variety of users and areas.
+而且 C++ 还必须服务于各种用户和领域。
+
+71
+00:06:58,880 --> 00:07:05,440
+We have millions of users and billions of people relying on us.
+我们拥有数百万用户，数十亿人依赖我们。
+
+72
+00:07:05,440 --> 00:07:07,399
+And one size doesn't fit all.
+而且，一个尺寸并不适合所有的人。
+
+73
+00:07:07,399 --> 00:07:12,720
+We can't just say this is what safety is, everybody do it this way.
+我们不能只说这就是安全，每个人都要这样做。
+
+74
+00:07:14,600 --> 00:07:16,399
+That doesn't quite work.
+这可不行。
+
+75
+00:07:16,399 --> 00:07:19,079
+C++ is also a systems programming.
+C++ 也是一种系统编程。
+
+76
+00:07:19,079 --> 00:07:22,640
+We manipulate hardware in various ways.
+我们以各种方式操纵硬件。
+
+77
+00:07:22,640 --> 00:07:29,679
+We use unusual hardware that is not known in language specification.
+我们使用的是语言规范中未知的非同寻常的硬件。
+
+78
+00:07:29,679 --> 00:07:33,480
+And we can't outsource this to other languages.
+我们不能将其外包给其他语言。
+
+79
+00:07:33,480 --> 00:07:40,119
+A lot of the so-called safe languages outsource all the low-level stuff to C or C++. 
+很多所谓的安全语言都将所有底层的东西外包给 C 或 C++。
+
+80
+00:07:40,119 --> 00:07:49,279
+So if we couldn't do it, well, there would be C left, and basically, but somebody has to do the dirty job here. 
+所以，如果我们做不到，那么就会剩下 C，基本上，但这里的脏活累活总得有人来干。
+
+81
+00:07:49,279 --> 00:07:52,760
+And we can't break billions of lines of existing code.
+我们不能破坏现有的数十亿行代码。
+
+82
+00:07:52,760 --> 00:07:55,920
+I say can't, not shouldn't, because we can't.
+我说不能，而不是不应该，因为我们不能。
+
+83
+00:07:55,920 --> 00:08:03,279
+If we try, people will use the old compilers, they will go to a different subset, they will just ignore us. 
+如果我们尝试，人们就会使用旧的编译器，就会使用不同的子集，就会无视我们。
+
+84
+00:08:03,279 --> 00:08:05,399
+This can't be done.
+这是不可能的。
+
+85
+00:08:05,399 --> 00:08:10,760
+And we can't upgrade the millions of developers quickly.
+我们也无法迅速升级数百万开发人员。
+
+86
+00:08:10,760 --> 00:08:13,119
+It takes a long time.
+这需要很长时间。
+
+87
+00:08:13,119 --> 00:08:20,399
+I keep bumping into people who learn C++ from videos and books that are 10 or 20 years old. 
+我经常遇到一些人从 10 年或 20 年前的视频和书籍中学习 C++。
+
+88
+00:08:20,399 --> 00:08:32,559
+I mean, it's tragic, but it could have been so much easier, and the result could have been so much better if they had up-to-date materials teaching up-to-date C++. 
+我的意思是，这是一个悲剧，但如果他们有最新的教材，教授最新的 C++，事情就会简单得多，结果也会好得多。
+
+89
+00:08:32,559 --> 00:08:42,960
+But getting a whole community like this to move forward is much harder than most people imagine. 
+但是，要让这样一个社区整体向前迈进，比大多数人想象的要难得多。
+
+90
+00:08:43,799 --> 00:08:47,280
+Okay, these are difficulties, but we must improve, and we can.
+好吧，这些都是困难，但我们必须改进，而且我们可以改进。
+
+91
+00:08:48,799 --> 00:08:59,400
+So the challenge is to describe what we mean by type safe C++ use, no violations to the static type system, no resource leak. 
+因此，我们面临的挑战是如何描述我们所说的 C++ 使用类型安全、不违反静态类型系统、不泄漏资源。
+
+92
+00:08:59,400 --> 00:09:14,799
+If a system leaks a resource, memory, locks, file handles and such, I wouldn't consider it safe, because I can crash it with the equivalent of denial of service attack. 
+如果一个系统泄漏了资源、内存、锁、文件句柄等，我就不会认为它是安全的，因为我可以用相当于拒绝服务攻击的方式让它崩溃。
+
+93
+00:09:14,799 --> 00:09:19,200
+Or I could just be sloppy and it crashes when it runs out of resources. 
+也可能是我太马虎了，资源耗尽后就崩溃了。
+
+94
+00:09:19,200 --> 00:09:28,200
+So I'm very keen on resource safety, and this is actually one of the things that came into C++ in the first two weeks. 
+因此，我非常重视资源安全，这实际上也是 C++ 在最初两周内出现的问题之一。
+
+95
+00:09:29,520 --> 00:09:33,080
+And we have to convince developers to do this.
+我们必须说服开发人员这样做。
+
+96
+00:09:33,080 --> 00:09:40,000
+There's a lot of belief out there that if you do grubby, complicated, low-level stuff, it must be faster. 
+有很多人认为，如果你做的是邋遢、复杂、低级的事情，那一定会更快。
+
+97
+00:09:41,599 --> 00:09:47,679
+And furthermore, I can write this grubby, low-level, complicated stuff to show how smart I am. 
+此外，我还可以写这些邋遢、低级、复杂的东西来显示我有多聪明。
+
+98
+00:09:49,919 --> 00:09:51,479
+This does not work.
+这行不通。
+
+99
+00:09:52,840 --> 00:09:58,239
+We have to raise the level of programming and get this to work at scale.
+我们必须提高程序设计的水平，使其大规模运行。
+
